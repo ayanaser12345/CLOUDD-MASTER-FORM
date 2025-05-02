@@ -1,0 +1,100 @@
+require('dotenv').config(); 
+const express = require('express');
+const session = require('express-session');
+const nodemailer = require('nodemailer');
+const path = require('path');
+const app = express();
+
+const PORT = process.env.PORT || 5003;
+
+// Session middleware setup
+app.use(session({
+    secret: 'your_secret_key',  // Change this to a strong secret
+    resave: false,
+    saveUninitialized: true,
+}));
+
+// Middleware
+app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Authentication middleware to protect routes
+function isAuthenticated(req, res, next) {
+    if (req.session && req.session.user === 'admin') {
+        return next();
+    } else {
+        res.redirect('/login');
+    }
+}
+
+// Routes for login and logout
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // Hardcoded credentials for now (you can replace this with a database later)
+    if (username === 'admin' && password === 'password123') {
+        req.session.user = 'admin';
+        res.redirect('/');
+    } else {
+        res.send('Invalid credentials');
+    }
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+// Home route - Protected by isAuthenticated middleware
+app.get('/', isAuthenticated, (req, res) => {
+    res.sendFile(__dirname + '/public/contactform.html');
+});
+
+// Handling form submission (sending email)
+app.post('/', (req, res) => {
+    console.log(req.body);
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.USER_EMAIL, // Your email address from .env file
+            pass: process.env.EMAIL_PASS, // Your email password from .env file
+        }
+    });
+
+    const mailOptions = {
+        from: req.body.email,
+        to: process.env.USER_EMAIL,  // This sends email to your email address (can be changed)
+        subject: `Message from ${req.body.name}: ${req.body.subject}`,
+        text: req.body.message,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log('Error:', error);  // More detailed error logging
+            res.send('Error sending email');
+        } else {
+            console.log('Email sent: ' + info.response);
+            res.send('Success');
+        }
+    });
+});
+
+// Route to check if the user is authenticated
+app.get('/check-session', (req, res) => {
+    if (req.session && req.session.user === 'admin') {
+        res.status(200).send();  // Session exists, no need to do anything
+    } else {
+        res.status(401).send();  // User not authenticated, return error
+    }
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+});
