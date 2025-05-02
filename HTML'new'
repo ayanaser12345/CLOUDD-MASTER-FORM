@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+</head>
+<body>
+    <!-- Check if the user is authenticated, otherwise redirect to login -->
+    <script>
+        fetch('/check-session')
+            .then(response => {
+                if (!response.ok) {
+                    window.location.href = '/login';  // Redirect to login if session is not found
+                }
+            })
+            .catch(() => {
+                window.location.href = '/login';  // In case of any error, redirect to login
+            });
+    </script>
+
+    <div class="form-container">
+        <form class="contact-form" action="/" method="POST">
+            <h2>CONTACT</h2>
+            <input type="text" id="name" name="name" placeholder="Full name" required><br>
+            <input type="email" id="email" name="email" placeholder="Email" required><br>
+            <input type="text" id="subject" name="subject" placeholder="Subject" required><br>
+            <textarea id="message" name="message" placeholder="Message" cols="30" rows="10" required></textarea><br>
+            <textarea id="signature" name="signature" placeholder="Your signature" cols="30" rows="4" required></textarea><br>
+            <input type="submit" class="submit" value="Send Message">
+        </form>
+    </div>
+    
+    <script src="./js/app.js"></script>
+</body>
+</html>
+
